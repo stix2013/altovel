@@ -20,6 +20,7 @@ test('profile information can be updated', function () {
         ->patch('/settings/profile', [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'role' => 'viewer', // Add default role
         ]);
 
     $response
@@ -41,6 +42,7 @@ test('email verification status is unchanged when the email address is unchanged
         ->patch('/settings/profile', [
             'name' => 'Test User',
             'email' => $user->email,
+            'role' => $user->role ?? 'viewer', // Add existing or default role
         ]);
 
     $response
@@ -49,6 +51,47 @@ test('email verification status is unchanged when the email address is unchanged
 
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
+
+test('profile role can be updated', function () {
+    $user = User::factory()->create(['role' => 'viewer']);
+
+    $response = $this
+        ->actingAs($user)
+        ->patch('/settings/profile', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'role' => 'admin',
+        ]);
+
+    $response
+        ->assertSessionHasNoErrors()
+        ->assertRedirect('/settings/profile');
+
+    $user->refresh();
+
+    expect($user->name)->toBe('Test User');
+    expect($user->email)->toBe('test@example.com');
+    expect($user->role)->toBe('admin');
+    expect($user->email_verified_at)->toBeNull();
+});
+
+test('profile role must be valid', function (string $invalidRole, ?string $expectedMessage) {
+    $user = User::factory()->create(['role' => 'editor']);
+
+    $response = $this
+        ->actingAs($user)
+        ->patch('/settings/profile', [
+            'name' => 'Test User',
+            'email' => $user->email, // Keep email same to avoid email verification side-effects
+            'role' => $invalidRole,
+        ]);
+
+    $response->assertSessionHasErrors(['role' => $expectedMessage]);
+    expect($user->refresh()->role)->toBe('editor');
+})->with([
+    'not in predefined list' => ['subscriber', 'The selected role is invalid.'],
+    'empty role' => ['', 'The role field is required.'],
+]);
 
 test('user can delete their account', function () {
     $user = User::factory()->create();

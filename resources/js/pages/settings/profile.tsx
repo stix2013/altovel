@@ -22,6 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 type ProfileForm = {
     name: string;
     email: string;
+    role: string;
 };
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
@@ -30,6 +31,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
         email: auth.user.email,
+        role: auth.user.role || 'viewer',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -80,6 +82,24 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             />
 
                             <InputError className="mt-2" message={errors.email} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="role">Role</Label>
+
+                            <select
+                                id="role"
+                                className="mt-1 block w-full rounded-md border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-50 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
+                                value={data.role}
+                                onChange={(e) => setData('role', e.target.value)}
+                                required
+                            >
+                                <option value="admin">Admin</option>
+                                <option value="editor">Editor</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+
+                            <InputError className="mt-2" message={errors.role} />
                         </div>
 
                         {mustVerifyEmail && auth.user.email_verified_at === null && (
