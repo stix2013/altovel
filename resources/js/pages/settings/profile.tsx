@@ -22,16 +22,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 type ProfileForm = {
     name: string;
     email: string;
-    role: string;
+    role_id: number;
 };
 
-export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
+export default function Profile({ mustVerifyEmail, status, roles }: { mustVerifyEmail: boolean; status?: string; roles: Array<{id: number; name: string}> }) {
     const { auth } = usePage<SharedData>().props;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
         email: auth.user.email,
-        role: auth.user.role || 'viewer',
+        role_id: auth.user.role_id !== undefined ? Number(auth.user.role_id) : (roles.find(r => r.name === 'Viewer')?.id || roles[0]?.id || 0),
     });
 
     const submit: FormEventHandler = (e) => {
@@ -88,18 +88,21 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <Label htmlFor="role">Role</Label>
 
                             <select
-                                id="role"
+                                id="role_id"
                                 className="mt-1 block w-full rounded-md border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-50 dark:focus:border-indigo-600 dark:focus:ring-indigo-600"
-                                value={data.role}
-                                onChange={(e) => setData('role', e.target.value)}
+                                value={data.role_id}
+                                onChange={(e) => setData('role_id', parseInt(e.target.value, 10))}
                                 required
                             >
-                                <option value="admin">Admin</option>
-                                <option value="editor">Editor</option>
-                                <option value="viewer">Viewer</option>
+                                <option value="">Select a role</option>
+                                {roles.map((role) => (
+                                    <option key={role.id} value={role.id}>
+                                        {role.name}
+                                    </option>
+                                ))}
                             </select>
 
-                            <InputError className="mt-2" message={errors.role} />
+                            <InputError className="mt-2" message={errors.role_id} />
                         </div>
 
                         {mustVerifyEmail && auth.user.email_verified_at === null && (

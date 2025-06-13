@@ -28,7 +28,7 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
 
-            'role' => ['required', 'string', Rule::in(['admin', 'editor', 'viewer'])],
+            'role_id' => ['required', 'integer', Rule::exists('roles', 'id')],
         ];
     }
 }
