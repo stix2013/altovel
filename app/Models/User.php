@@ -17,10 +17,15 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    public const ROLE_GUEST = 'guest';
+    public const ROLE_CUSTOMER = 'customer';
+    public const ROLE_ADMINISTRATOR = 'administrator';
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -43,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => 'string',
         ];
     }
 }
